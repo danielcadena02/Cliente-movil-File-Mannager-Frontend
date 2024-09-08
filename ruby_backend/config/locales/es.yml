@@ -1,0 +1,4 @@
+es:
+  hello: "Hola mundo"
+  hello_name: "Hola %s"
+  hello_name_age: "Hola %s, tienes %d años

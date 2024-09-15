@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 
 import 'Login/LoginPage.dart'; // Importa el archivo LoginPage.dart que contiene la vista de inicio de sesión.
+import 'view/screens/home_screen.dart';
 
 void main() => runApp(const MyApp());
 
@@ -21,7 +22,7 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         themeMode: ThemeMode.dark,
         theme: ThemeData(useMaterial3: true),
-        home: const LoginPage(), //  pantalla de inicio LoginPage.
+        home: const HomePage(), //  pantalla de inicio LoginPage.
       ),
     );
   }

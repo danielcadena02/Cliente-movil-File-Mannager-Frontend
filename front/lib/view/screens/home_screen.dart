@@ -9,6 +9,8 @@ import 'package:get/get.dart';
 import '../../Login/LoginPage.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:base64/base64.dart';
+import 'package:path_provider/path_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -19,8 +21,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   static const String serverAddress = '192.168.221.179';
-  late List<Map<String, dynamic>> entities =
-      []; // en esta variable almaceno los archivos
+  late List<Map<String, dynamic>> entities =[]; // en esta variable almaceno los archivos
   var pagina = 0; //es un paginador
   List<int> pre = [];
 

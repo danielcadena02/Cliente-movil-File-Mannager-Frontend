@@ -22,7 +22,7 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         themeMode: ThemeMode.dark,
         theme: ThemeData(useMaterial3: true),
-        home: const HomePage(), //  pantalla de inicio LoginPage.
+        home: HomePage(), //  pantalla de inicio LoginPage.
       ),
     );
   }

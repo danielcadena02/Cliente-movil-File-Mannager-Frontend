@@ -112,9 +112,7 @@ class RegisterPage extends StatelessWidget {
                   labelText: 'Username',
                   filled: true,
                   fillColor: Colors.white,
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF536492)),
-                  ),
+                  border: inputborder
                 ),
               ),
               const SizedBox(height: 20),

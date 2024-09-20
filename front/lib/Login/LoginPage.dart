@@ -1,8 +1,7 @@
+import 'package:file_manager_app/view/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'Register.dart'; // Asegúrate de que el archivo Register.dart esté en la ubicación correcta
-import '../../view/screens/home_screen.dart'; // Asegúrate de que el archivo home_screen.dart esté en la ubicación correcta
 
 class LoginPage extends StatelessWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -41,8 +40,9 @@ class LoginPage extends StatelessWidget {
                   labelText: 'Correo electrónico',
                   filled: true,
                   fillColor: Colors.white,
-                  // TODO: border
-                  // OutlinedBorder(side: BorderSide(color: Color(0xFF536492))
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF536492)),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -53,8 +53,9 @@ class LoginPage extends StatelessWidget {
                   labelText: 'Contraseña',
                   filled: true,
                   fillColor: Colors.white,
-                  // TODO: border
-                  // OutlinedBorder(side: BorderSide(color: Color(0xFF536492))
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF536492)),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -64,8 +65,7 @@ class LoginPage extends StatelessWidget {
                   Get.to(HomePage());
                 },
                 style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Color(0xFF536492)),
+                  backgroundColor: WidgetStatePropertyAll(Color(0xFF536492))
                 ),
                 child: const Text(
                   'Iniciar sesión',

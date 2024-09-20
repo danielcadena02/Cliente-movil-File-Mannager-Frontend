@@ -112,7 +112,9 @@ class RegisterPage extends StatelessWidget {
                   labelText: 'Username',
                   filled: true,
                   fillColor: Colors.white,
-                  border: inputborder
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF536492)),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -170,7 +172,7 @@ class RegisterPage extends StatelessWidget {
                   _registerUser(username, name, email, age, password, context);
                 },
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(const Color(0xFF536492)),
+                  backgroundColor: WidgetStatePropertyAll(Color(0xFF536492))
                 ),
                 child: const Text(
                   'Registrarse',

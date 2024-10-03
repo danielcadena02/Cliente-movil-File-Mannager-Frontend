@@ -1,11 +1,11 @@
 import 'package:file_manager_app/view/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'Register.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';//para manejo de cookies y extracción del token
 
 class LoginPage extends StatelessWidget {
@@ -17,32 +17,40 @@ class LoginPage extends StatelessWidget {
     String password = '';
 
     Future<void> login(BuildContext context) async {
-      final url = Uri.parse('http://conquest3.bucaramanga.upb.edu.co:5000/auth/login'); // URL del endpoint de autenticación
+      final url = 'http://conquest3.bucaramanga.upb.edu.co:5000/auth/login'; // URL del endpoint de autenticación
       final storage = FlutterSecureStorage();
+      final dio = Dio();
+      final cookieJar = CookieJar();
+
+      dio.interceptors.add(CookieManager(cookieJar));
 
       try {
-        final response = await http.post(
+        final response = await dio.post(
           url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, String>{
+          data: jsonEncode(<String, String>{
             'username': username,
             'password': password,
           }),
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          ),
         );
 
-        if (response.statusCode == 200) {
-          final responseData = jsonDecode(response.body);
-          final token = responseData['token'];
+        if (response.statusCode == 200 && response.data['token'] != false) {
+          //extrae el token de las cookies
+          final cookies = await cookieJar.loadForRequest(Uri.parse(url));
+          final token = cookies.firstWhere((cookie) => cookie.name == 'tkn').value;
 
+          print('Token: $token');
           // Guardar el JWT
           await storage.write(key: 'accessToken', value: token);
 
-          Get.to(HomePage());
+          Get.to(() => HomePage());
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al iniciar sesión: ${response.statusCode}')),
+            SnackBar(content: Text('Error al iniciar sesión: ${response.data['message']}')),
           );
         }
       } catch (e) {
@@ -103,7 +111,7 @@ class LoginPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () => login(context),
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Color(0xFF536492)),
+                backgroundColor: WidgetStateProperty .all(Color(0xFF536492)),
               ),
               child: const Text(
                 'Iniciar sesión',
@@ -114,7 +122,7 @@ class LoginPage extends StatelessWidget {
             TextButton(
               onPressed: () {
                 // Navegar a la pantalla de registro (RegisterPage)
-                Get.to(RegisterPage());
+                Get.to(() =>RegisterPage());
               },
               child: Text(
                 '¿No tienes cuenta? Registrarse',

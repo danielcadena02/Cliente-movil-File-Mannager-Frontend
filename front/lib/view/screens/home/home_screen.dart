@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
 
 class HomePage extends StatefulWidget {
   const HomePage();
@@ -20,9 +19,6 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
-
-
 
 class _HomePageState extends State<HomePage> {
   final FilesController myController = Get.put(FilesController());

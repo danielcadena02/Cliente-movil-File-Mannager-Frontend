@@ -14,6 +14,42 @@ class LoginPage extends StatelessWidget {
     String username = '';
     String password = '';
 
+    Future<void> login(BuildContext context) async {
+      final url = Uri.parse('http:'); // URL del endpoint de autenticación
+      final storage = FlutterSecureStorage();
+
+      try {
+        final response = await http.post(
+          url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'username': username,
+            'password': password,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+          final token = responseData['token'];
+
+          // Guardar el JWT
+          await storage.write(key: 'accessToken', value: token);
+
+          Get.to(HomePage());
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al iniciar sesión: ${response.statusCode}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de red: $e')),
+        );
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(

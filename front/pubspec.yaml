@@ -9,7 +9,9 @@ environment:
 
 dependencies:
   base64: ^1.0.0
+  cookie_jar: ^4.0.8
   cupertino_icons: ^1.0.2
+  dio: ^5.7.0
   disk_space: ^0.2.1
   file_manager: ^1.0.2
   file_picker: ^6.0.0

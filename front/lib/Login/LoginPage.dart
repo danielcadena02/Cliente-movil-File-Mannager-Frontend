@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'Register.dart';
+import 'package:dio/dio.dart';
+import 'package:cookie_jar/cookie_jar.dart';//para manejo de cookies y extracción del token
 
 class LoginPage extends StatelessWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -15,7 +17,7 @@ class LoginPage extends StatelessWidget {
     String password = '';
 
     Future<void> login(BuildContext context) async {
-      final url = Uri.parse('http:'); // URL del endpoint de autenticación
+      final url = Uri.parse('http://conquest3.bucaramanga.upb.edu.co:5000/auth/login'); // URL del endpoint de autenticación
       final storage = FlutterSecureStorage();
 
       try {

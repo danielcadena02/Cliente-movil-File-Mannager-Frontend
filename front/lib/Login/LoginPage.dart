@@ -47,7 +47,7 @@ class LoginPage extends StatelessWidget {
           // Guardar el JWT
           await storage.write(key: 'accessToken', value: token);
 
-          Get.to(() => HomePage());
+          Get.to(() => HomePage(token: token));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error al iniciar sesión: ${response.data['message']}')),

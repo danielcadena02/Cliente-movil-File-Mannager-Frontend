@@ -32,11 +32,22 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    getPermission();
+    _requestPermission();
+  }
+  Future<void> _requestPermission() async {
+    if (await Permission.storage.request().isGranted) {
+      setState(() {
+        gotPermission = true;
+      });
+    } else {
+      setState(() {
+        gotPermission = false;
+      });
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
+   Widget build(BuildContext context) {
     return ControlBackButton(
       controller: myController.controller,
       child: Scaffold(

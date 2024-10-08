@@ -315,7 +315,6 @@ class _HomePageState extends State<HomePage> {
       title: const Text("File Manager"),
     );
   }
-
   Future<void> selectAndCopyFile() async {
     final result = await FilePicker.platform.pickFiles();
 

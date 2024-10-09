@@ -1,23 +1,21 @@
 import 'dart:io';
 
 import 'package:file_manager/file_manager.dart';
-import 'package:file_manager_app/utils/const.dart';
 import 'package:file_manager_app/view/screens/home/controller/files_controller.dart';
 import 'package:file_manager_app/view/screens/home/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage();
+  final String token;
+
+  const HomePage({Key? key, required this.token}) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {

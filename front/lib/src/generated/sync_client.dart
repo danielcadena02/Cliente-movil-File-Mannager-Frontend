@@ -2,7 +2,7 @@ import 'package:grpc/grpc.dart';
 import 'package:file_manager_app/src/generated/sync.pbgrpc.dart';
 
 class SyncClient {
-  ClientChannel channel;
+  ClientChannel channel;// Canal de comunicación con el servidor
   late SyncServiceClient stub;
 
   SyncClient()

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_manager/file_manager.dart';
 import 'package:file_manager_app/Login/LoginPage.dart';
+import 'package:file_manager_app/src/generated/sync.pb.dart';
 import 'package:file_manager_app/view/screens/home/controller/files_controller.dart';
 import 'package:file_manager_app/view/screens/home/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _requestPermission() async {
-    if (await Permission.storage.request().isGranted) {
+    final status = await Permission.storage.request();
+    if (status.isGranted) {
       setState(() {
         gotPermission = true;
       });
@@ -52,7 +54,7 @@ class _HomePageState extends State<HomePage> {
     final syncRequest = SyncRequest(
       sep: '/',
       user: 'test_user',
-      clientTree: {'/path/to/file': 'checksum'},
+      clientTree: {'/path/to/file': FileData(fingerprint: 'checksum')}, // Ajusta el tipo de dato aquí
       toRemove: ['/path/to/remove'],
     );
 
@@ -74,184 +76,178 @@ class _HomePageState extends State<HomePage> {
       controller: myController.controller,
       child: Scaffold(
         appBar: appBar(context),
-        body: FileManager(
-          controller: myController.controller,
-          builder: (context, snapshot) {
-            myController.calculateSize(snapshot);
-            final List<FileSystemEntity> entities = isSearching
-                ? snapshot.where((element) => element.path.contains(searchQuery)).toList()
-                : snapshot.where((element) => element.path != '/storage/emulated/0/Android').toList();
+        body: gotPermission
+            ? FileManager(
+                controller: myController.controller,
+                builder: (context, snapshot) {
+                  myController.calculateSize(snapshot);
+                  final List<FileSystemEntity> entities = isSearching
+                      ? snapshot.where((element) => element.path.contains(searchQuery)).toList()
+                      : snapshot.where((element) => element.path != '/storage/emulated/0/Android').toList();
 
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Visibility(
-                    visible: !fullScreen,
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: SizedBox(
-                            height: 7.5.h,
-                            child: TextField(
-                              onChanged: (value) {
-                                setState(() {
-                                  isSearching = true;
-                                  searchQuery = value;
-                                  if (searchQuery.isEmpty) {
-                                    isSearching = false;
-                                  }
-                                });
-                              },
-                              decoration: InputDecoration(
-                                suffixIcon: const Icon(Icons.search),
-                                filled: true,
-                                fillColor: Colors.grey[200],
-                                hintText: 'Search Files',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16.0),
-                                  borderSide: BorderSide.none,
+                        Visibility(
+                          visible: !fullScreen,
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: SizedBox(
+                                  height: 7.5.h,
+                                  child: TextField(
+                                    onChanged: (value) {
+                                      setState(() {
+                                        isSearching = true;
+                                        searchQuery = value;
+                                        if (searchQuery.isEmpty) {
+                                          isSearching = false;
+                                        }
+                                      });
+                                    },
+                                    decoration: InputDecoration(
+                                      suffixIcon: const Icon(Icons.search),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
+                                      hintText: 'Search Files',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16.0),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                            itemCount: entities.length,
+                            itemBuilder: (context, index) {
+                              FileSystemEntity entity = entities[index];
+
+                              return Ink(
+                                color: Colors.transparent,
+                                child: ListTile(
+                                  trailing: PopupMenuButton(
+                                    itemBuilder: (BuildContext context) {
+                                      return <PopupMenuEntry>[
+                                        PopupMenuItem(
+                                          value: 'button1',
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Icon(Icons.delete, color: Colors.red),
+                                              const Text("Delete"),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'button2',
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Icon(Icons.rotate_left_sharp, color: Colors.blue),
+                                              const Text("Rename"),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'button3',
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Icon(Icons.move_down_rounded, color: Colors.green),
+                                              const Text("Move"),
+                                            ],
+                                          ),
+                                        ),
+                                      ];
+                                    },
+                                    onSelected: (value) async {
+                                      switch (value) {
+                                        case 'button1':
+                                          await entity.delete(recursive: true).then((_) {
+                                            setState(() {});
+                                          });
+                                          break;
+                                        case 'button2':
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              TextEditingController renameController = TextEditingController();
+                                              return AlertDialog(
+                                                title: Text("Rename ${FileManager.basename(entity)}"),
+                                                content: TextField(controller: renameController),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text("Cancel"),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      await entity.rename("${myController.controller.getCurrentPath}/${renameController.text.trim()}").then((_) {
+                                                        Navigator.pop(context);
+                                                        setState(() {});
+                                                      });
+                                                    },
+                                                    child: const Text("Rename"),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                          break;
+                                        case 'button3':
+                                          selectedFile = entity;
+                                          setState(() {
+                                            isMoving = true;
+                                          });
+                                          break;
+                                      }
+                                    },
+                                    child: const Icon(Icons.more_vert),
+                                  ),
+                                  leading: FileManager.isFile(entity)
+                                      ? Card(color: Colors.yellow, elevation: 0, child: Padding(padding: const EdgeInsets.all(8.0), child: Icon(Icons.insert_drive_file)))
+                                      : Card(color: Colors.orange, elevation: 0, child: Padding(padding: const EdgeInsets.all(8.0), child: Icon(Icons.folder))),
+                                  title: Text(FileManager.basename(entity, showFileExtension: true), style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
+                                  subtitle: subtitle(entity),
+                                  onTap: () async {
+                                    if (FileManager.isDirectory(entity)) {
+                                      try {
+                                        myController.controller.openDirectory(entity);
+                                      } catch (e) {
+                                        myController.alert(context, "Unable to open this folder");
+                                      }
+                                    }
+                                  },
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 0),
-                      itemCount: entities.length,
-                      itemBuilder: (context, index) {
-                        FileSystemEntity entity = entities[index];
-
-                        return Ink(
-                          color: Colors.transparent,
-                          child: ListTile(
-                            trailing: PopupMenuButton(
-                              itemBuilder: (BuildContext context) {
-                                return <PopupMenuEntry>[
-                                  PopupMenuItem(
-                                    value: 'button1',
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Icon(Icons.delete, color: Colors.red),
-                                        const Text("Delete"),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'button2',
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Icon(Icons.rotate_left_sharp, color: Colors.blue),
-                                        const Text("Rename"),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'button3',
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Icon(Icons.move_down_rounded, color: Colors.green),
-                                        const Text("Move"),
-                                      ],
-                                    ),
-                                  ),
-                                ];
-                              },
-                              onSelected: (value) async {
-                                switch (value) {
-                                  case 'button1':
-                                    await entity.delete(recursive: true).then((_) {
-                                      setState(() {});
-                                    });
-                                    break;
-                                  case 'button2':
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        TextEditingController renameController = TextEditingController();
-                                        return AlertDialog(
-                                          title: Text("Rename ${FileManager.basename(entity)}"),
-                                          content: TextField(controller: renameController),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text("Cancel"),
-                                            ),
-                                            TextButton(
-                                              onPressed: () async {
-                                                await entity.rename("${myController.controller.getCurrentPath}/${renameController.text.trim()}").then((_) {
-                                                  Navigator.pop(context);
-                                                  setState(() {});
-                                                });
-                                              },
-                                              child: const Text("Rename"),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                    break;
-                                  case 'button3':
-                                    selectedFile = entity;
-                                    setState(() {
-                                      isMoving = true;
-                                    });
-                                    break;
-                                }
-                              },
-                              child: const Icon(Icons.more_vert),
-                            ),
-                            leading: FileManager.isFile(entity)
-                                ? Card(color: Colors.yellow, elevation: 0, child: Padding(padding: const EdgeInsets.all(8.0), child: Image.asset("assets/3d/copy-dynamic-premium.png")))
-                                : Card(color: Colors.orange, elevation: 0, child: Padding(padding: const EdgeInsets.all(8.0), child: Image.asset("assets/3d/folder-dynamic-color.png"))),
-                            title: Text(FileManager.basename(entity, showFileExtension: true), style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
-                            subtitle: subtitle(entity),
-                            onTap: () async {
-                              if (FileManager.isDirectory(entity)) {
-                                try {
-                                  myController.controller.openDirectory(entity);
-                                } catch (e) {
-                                  myController.alert(context, "Unable to open this folder");
-                                }
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        floatingActionButton: gotPermission == false
-            ? FloatingActionButton.extended(
-                onPressed: () async {
-                  await getPermission();
+                  );
                 },
-                label: const Text("Request File Access Permission"),
               )
-            : null,
+            : Center(
+                child: FloatingActionButton.extended(
+                  onPressed: () async {
+                    await _requestPermission();
+                  },
+                  label: const Text("Request File Access Permission"),
+                ),
+              ),
       ),
     );
-  }
-
-  Future<void> getPermission() async {
-    if (await Permission.storage.request().isGranted) {
-      gotPermission = true;
-      setState(() {});
-    }
   }
 
   AppBar appBar(BuildContext context) {
@@ -350,7 +346,7 @@ class _HomePageState extends State<HomePage> {
         final destinationPath = "${myController.controller.getCurrentPath}/${file.name}";
 
         await File(path).copy(destinationPath);
-        setState(() {});
+        setState(() {}); // Corregido: Pasar una función vacía a setState
       }
     }
   }

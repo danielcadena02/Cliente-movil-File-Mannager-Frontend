@@ -38,8 +38,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _requestPermission() async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
+    if (await Permission.storage.request().isGranted) {
+      setState(() {
+        gotPermission = true;
+      });
+    } else if (await Permission.manageExternalStorage.request().isGranted) {
       setState(() {
         gotPermission = true;
       });
@@ -53,9 +56,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _syncData() async {
     final syncRequest = SyncRequest(
       sep: '/',
-      user: 'test_user',
-      clientTree: {'/path/to/file': FileData(fingerprint: 'checksum')}, // Ajusta el tipo de dato aquí
-      toRemove: ['/path/to/remove'],
+      user: 'paula',
+      clientTree: {'path/to/file': FileData(fingerprint: 'checksum')}
     );
 
     try {
@@ -257,6 +259,12 @@ class _HomePageState extends State<HomePage> {
           icon: const Icon(Icons.logout),
           onPressed: () {
             Get.offAll(LoginPage());
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            myController.controller.goToParentDirectory();
           },
         ),
         IconButton(

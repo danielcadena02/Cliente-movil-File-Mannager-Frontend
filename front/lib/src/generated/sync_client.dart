@@ -8,48 +8,55 @@ class SyncClient {
   ClientChannel channel; // Canal de comunicación con el servidor
   late SyncServiceClient stub;
   final String dirPath = "/path/to/syncfolder"; // Ruta del directorio de sincronización
-  final String username = "your_username"; // Nombre de usuario
+  final String username = "paula"; 
 
   SyncClient()
       : channel = ClientChannel(
-          'localhost',
-          port: 50051,
+          '10.153.91.133',
+          port: 50052,
           options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
         ) {
     stub = SyncServiceClient(channel);
   }
 
   Future<void> sync(SyncRequest request) async {
-    try {
-      final SyncResponse response = await stub.sync(request);
-      response.elements.forEach((key, value) {
-        print('Key: $key');
-        if (key == 'toClientRemove') {
-          value.elements.forEach((fileData) {
-            removeFile(fileData.path);
-          });
-        } else if (key == 'toSendToServer' || key == 'toServerUpdate') {
-          value.elements.forEach((fileData) {
-            upload(fileData.path, fileData.folderFingerprint);
-          });
-        } else if (key == 'toClientCreate') {
-          value.elements.forEach((fileData) {
-            if (fileData.isDir) {
-              createDirectory(fileData.path);
-            } else {
-              download(fileData.path, fileData.fingerprint);
-            }
-          });
-        } else if (key == 'toClientUpdate') {
-          value.elements.forEach((fileData) {
+  try {
+    final SyncResponse response = await stub.sync(request);
+    response.elements.forEach((key, value) {
+      print('Key: $key');
+      if (key == 'toClientRemove') {
+        value.elements.forEach((fileData) {
+          print('Removing file: ${fileData.path}');
+          removeFile(fileData.path);
+        });
+      } else if (key == 'toSendToServer' || key == 'toServerUpdate') {
+        value.elements.forEach((fileData) {
+          print('FileData path: ${fileData.path}');
+          final fullPath = p.join(dirPath, fileData.path);
+          print('Uploading file: $fullPath');
+          upload(fullPath, fileData.folderFingerprint);
+        });
+      } else if (key == 'toClientCreate') {
+        value.elements.forEach((fileData) {
+          if (fileData.isDir) {
+            print('Creating directory: ${fileData.path}');
+            createDirectory(fileData.path);
+          } else {
+            print('Downloading file: ${fileData.path}');
             download(fileData.path, fileData.fingerprint);
-          });
-        }
-      });
-    } catch (e) {
-      print('Error: $e');
-    }
+          }
+        });
+      } else if (key == 'toClientUpdate') {
+        value.elements.forEach((fileData) {
+          print('Updating file: ${fileData.path}');
+          download(fileData.path, fileData.fingerprint);
+        });
+      }
+    });
+  } catch (e) {
+    print('Error: $e');
   }
+}
 
   void removeFile(String path) {
     final file = File('$dirPath/$path');
@@ -70,7 +77,7 @@ class SyncClient {
   }
 
   Future<void> upload(String path, String folderFingerprint) async {
-    final file = File('$dirPath/$path');
+    final file = File(path);
     if (!file.existsSync()) {
       print('File not found: $path');
       return;
@@ -138,5 +145,4 @@ class ResponseStreamObserver<T> {
     required this.onError,
     required this.onCompleted,
   });
-
 }

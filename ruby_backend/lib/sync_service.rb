@@ -1,4 +1,3 @@
-# ruby_backend/lib/sync_service.rb
 
 require 'grpc'
 require 'sync_services_pb'

@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:file_manager_app/src/generated/sync_client.dart'; // Importa tu SyncClient
 
 class HomePage extends StatefulWidget {
   final String token;
@@ -21,6 +22,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FilesController myController = Get.put(FilesController());
+  final SyncClient _syncClient = SyncClient(); // Instancia de SyncClient
   String searchQuery = '';
   var gotPermission = false;
   var isMoving = false;
@@ -33,6 +35,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _requestPermission();
   }
+
   Future<void> _requestPermission() async {
     if (await Permission.storage.request().isGranted) {
       setState(() {
@@ -45,8 +48,28 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _syncData() async {
+    final syncRequest = SyncRequest(
+      sep: '/',
+      user: 'test_user',
+      clientTree: {'/path/to/file': 'checksum'},
+      toRemove: ['/path/to/remove'],
+    );
+
+    try {
+      await _syncClient.sync(syncRequest);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Synchronization successful')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Synchronization failed: $e')),
+      );
+    }
+  }
+
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return ControlBackButton(
       controller: myController.controller,
       child: Scaffold(
@@ -232,85 +255,89 @@ class _HomePageState extends State<HomePage> {
   }
 
   AppBar appBar(BuildContext context) {
-  return AppBar(
-    actions: [
-      IconButton(
-        icon: const Icon(Icons.logout),
-        onPressed: () {
-          Get.offAll(LoginPage());
-        },
-      ),
-      IconButton(
-        icon: const Icon(Icons.share_outlined),
-        onPressed: () {
-        },
-      ),
-      Visibility(
-        visible: isMoving,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: InkWell(
-            onTap: () {
-              selectedFile.rename(
-                "${myController.controller.getCurrentPath}/${FileManager.basename(selectedFile)}"
-              );
-              setState(() {
-                isMoving = false;
-              });
-            },
-            child: Row(
-              children: const [
-                Text("Move here ", style: TextStyle(fontWeight: FontWeight.w500)),
-                Icon(Icons.paste),
-              ],
+    return AppBar(
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () {
+            Get.offAll(LoginPage());
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.share_outlined),
+          onPressed: () {
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.sync),
+          onPressed: _syncData, // Llama al método de sincronización
+        ),
+        Visibility(
+          visible: isMoving,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: InkWell(
+              onTap: () {
+                selectedFile.rename(
+                  "${myController.controller.getCurrentPath}/${FileManager.basename(selectedFile)}"
+                );
+                setState(() {
+                  isMoving = false;
+                });
+              },
+              child: Row(
+                children: const [
+                  Text("Move here ", style: TextStyle(fontWeight: FontWeight.w500)),
+                  Icon(Icons.paste),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-      Visibility(
-        visible: !isMoving,
-        child: PopupMenuButton(
-          itemBuilder: (BuildContext context) {
-            return <PopupMenuEntry>[
-              PopupMenuItem(
-                value: 'button1',
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(Icons.file_present, color: Colors.blue),
-                    const Text("New File"),
-                  ],
+        Visibility(
+          visible: !isMoving,
+          child: PopupMenuButton(
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry>[
+                PopupMenuItem(
+                  value: 'button1',
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(Icons.file_present, color: Colors.blue),
+                      const Text("New File"),
+                    ],
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'button2',
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(Icons.folder_open, color: Colors.green),
-                    const Text("New Folder"),
-                  ],
+                PopupMenuItem(
+                  value: 'button2',
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(Icons.folder_open, color: Colors.green),
+                      const Text("New Folder"),
+                    ],
+                  ),
                 ),
-              ),
-            ];
-          },
-          onSelected: (value) async {
-            switch (value) {
-              case 'button1':
-                await selectAndCopyFile();
-                break;
-              case 'button2':
-                myController.createFolder(context);
-                break;
-            }
-          },
-          child: const Icon(Icons.add),
+              ];
+            },
+            onSelected: (value) async {
+              switch (value) {
+                case 'button1':
+                  await selectAndCopyFile();
+                  break;
+                case 'button2':
+                  myController.createFolder(context);
+                  break;
+              }
+            },
+            child: const Icon(Icons.add),
+          ),
         ),
-      ),
-    ],
-    title: const Text("File Manager"),
-  );
-}
+      ],
+      title: const Text("File Manager"),
+    );
+  }
 
   Future<void> selectAndCopyFile() async {
     final result = await FilePicker.platform.pickFiles();

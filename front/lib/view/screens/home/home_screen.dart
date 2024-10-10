@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_manager_app/src/generated/sync_client.dart'; // Importa tu SyncClient
+import 'package:file_manager_app/view/screens/home/widgets/image_viewer.dart'; // Importa ImageViewer
 
 class HomePage extends StatefulWidget {
   final String token;
@@ -57,7 +58,8 @@ class _HomePageState extends State<HomePage> {
     final syncRequest = SyncRequest(
       sep: '/',
       user: 'paula',
-      clientTree: {'path/to/file': FileData(fingerprint: 'checksum')}
+      clientTree: {'/path/to/file': FileData(fingerprint: 'checksum')},
+      toRemove: ['/path/to/remove'],
     );
 
     try {
@@ -70,6 +72,10 @@ class _HomePageState extends State<HomePage> {
         SnackBar(content: Text('Synchronization failed: $e')),
       );
     }
+  }
+
+  void _viewImage(String imageUrl) {
+    Get.to(() => ImageViewer(imageUrl: imageUrl));
   }
 
   @override
@@ -168,6 +174,16 @@ class _HomePageState extends State<HomePage> {
                                             ],
                                           ),
                                         ),
+                                        PopupMenuItem(
+                                          value: 'button4',
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Icon(Icons.image, color: Colors.purple),
+                                              const Text("View Image"),
+                                            ],
+                                          ),
+                                        ),
                                       ];
                                     },
                                     onSelected: (value) async {
@@ -212,6 +228,10 @@ class _HomePageState extends State<HomePage> {
                                             isMoving = true;
                                           });
                                           break;
+                                        case 'button4':
+                                          final imageUrl = 'http://your-server-address/${entity.path}';
+                                          _viewImage(imageUrl);
+                                          break;
                                       }
                                     },
                                     child: const Icon(Icons.more_vert),
@@ -228,6 +248,9 @@ class _HomePageState extends State<HomePage> {
                                       } catch (e) {
                                         myController.alert(context, "Unable to open this folder");
                                       }
+                                    } else if (FileManager.isFile(entity)) {
+                                      final imageUrl = 'http://your-server-address/${entity.path}';
+                                      _viewImage(imageUrl);
                                     }
                                   },
                                 ),

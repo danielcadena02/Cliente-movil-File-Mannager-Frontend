@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_manager/file_manager.dart';
+import 'package:file_manager_app/Login/LoginPage.dart';
 import 'package:file_manager_app/view/screens/home/controller/files_controller.dart';
 import 'package:file_manager_app/view/screens/home/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -91,22 +92,6 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text("Recent Files", style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                              InkWell(
-                                onTap: () {
-                                  fullScreen = true;
-                                  setState(() {});
-                                },
-                                child: Text("See All", style: TextStyle(color: Colors.grey, fontSize: 10.sp)),
-                              )
-                            ],
                           ),
                         ),
                       ],
@@ -247,72 +232,86 @@ class _HomePageState extends State<HomePage> {
   }
 
   AppBar appBar(BuildContext context) {
-    return AppBar(
-      actions: [
-        Visibility(
-          visible: isMoving,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: InkWell(
-              onTap: () {
-                selectedFile.rename("${myController.controller.getCurrentPath}/${FileManager.basename(selectedFile)}");
-                setState(() {
-                  isMoving = false;
-                });
-              },
-              child: Row(
-                children: const [
-                  Text("Move here ", style: TextStyle(fontWeight: FontWeight.w500)),
-                  Icon(Icons.paste),
-                ],
-              ),
+  return AppBar(
+    actions: [
+      IconButton(
+        icon: const Icon(Icons.logout),
+        onPressed: () {
+          Get.offAll(LoginPage());
+        },
+      ),
+      IconButton(
+        icon: const Icon(Icons.share_outlined),
+        onPressed: () {
+        },
+      ),
+      Visibility(
+        visible: isMoving,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InkWell(
+            onTap: () {
+              selectedFile.rename(
+                "${myController.controller.getCurrentPath}/${FileManager.basename(selectedFile)}"
+              );
+              setState(() {
+                isMoving = false;
+              });
+            },
+            child: Row(
+              children: const [
+                Text("Move here ", style: TextStyle(fontWeight: FontWeight.w500)),
+                Icon(Icons.paste),
+              ],
             ),
           ),
         ),
-        Visibility(
-          visible: !isMoving,
-          child: PopupMenuButton(
-            itemBuilder: (BuildContext context) {
-              return <PopupMenuEntry>[
-                PopupMenuItem(
-                  value: 'button1',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(Icons.file_present, color: Colors.blue),
-                      const Text("New File"),
-                    ],
-                  ),
+      ),
+      Visibility(
+        visible: !isMoving,
+        child: PopupMenuButton(
+          itemBuilder: (BuildContext context) {
+            return <PopupMenuEntry>[
+              PopupMenuItem(
+                value: 'button1',
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(Icons.file_present, color: Colors.blue),
+                    const Text("New File"),
+                  ],
                 ),
-                PopupMenuItem(
-                  value: 'button2',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(Icons.folder_open, color: Colors.green),
-                      const Text("New Folder"),
-                    ],
-                  ),
+              ),
+              PopupMenuItem(
+                value: 'button2',
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(Icons.folder_open, color: Colors.green),
+                    const Text("New Folder"),
+                  ],
                 ),
-              ];
-            },
-            onSelected: (value) async {
-              switch (value) {
-                case 'button1':
-                  await selectAndCopyFile();
-                  break;
-                case 'button2':
-                  myController.createFolder(context);
-                  break;
-              }
-            },
-            child: const Icon(Icons.add),
-          ),
+              ),
+            ];
+          },
+          onSelected: (value) async {
+            switch (value) {
+              case 'button1':
+                await selectAndCopyFile();
+                break;
+              case 'button2':
+                myController.createFolder(context);
+                break;
+            }
+          },
+          child: const Icon(Icons.add),
         ),
-      ],
-      title: const Text("File Manager"),
-    );
-  }
+      ),
+    ],
+    title: const Text("File Manager"),
+  );
+}
+
   Future<void> selectAndCopyFile() async {
     final result = await FilePicker.platform.pickFiles();
 

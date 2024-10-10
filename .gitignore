@@ -169,3 +169,6 @@ yarn-debug.log*
 /storage/*
 !/storage/.keep
 /public/uploads
+/front/linux
+/front/macos
+/front/windows

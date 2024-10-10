@@ -20,46 +20,46 @@ class SyncClient {
   }
 
   Future<void> sync(SyncRequest request) async {
-  try {
-    final SyncResponse response = await stub.sync(request);
-    response.elements.forEach((key, value) {
-      print('Key: $key');
-      if (key == 'toClientRemove') {
-        value.elements.forEach((fileData) {
-          print('Removing file: ${fileData.path}');
-          removeFile(fileData.path);
-        });
-      } else if (key == 'toSendToServer' || key == 'toServerUpdate') {
-        value.elements.forEach((fileData) {
-          print('FileData path: ${fileData.path}');
-          final fullPath = p.join(dirPath, fileData.path);
-          print('Uploading file: $fullPath');
-          upload(fullPath, fileData.folderFingerprint);
-        });
-      } else if (key == 'toClientCreate') {
-        value.elements.forEach((fileData) {
-          if (fileData.isDir) {
-            print('Creating directory: ${fileData.path}');
-            createDirectory(fileData.path);
-          } else {
-            print('Downloading file: ${fileData.path}');
+    try {
+      final SyncResponse response = await stub.sync(request);
+      response.elements.forEach((key, value) {
+        print('Key: $key');
+        if (key == 'toClientRemove') {
+          value.elements.forEach((fileData) {
+            print('Removing file: ${fileData.path}');
+            removeFile(fileData.path);
+          });
+        } else if (key == 'toSendToServer' || key == 'toServerUpdate') {
+          value.elements.forEach((fileData) {
+            print('FileData path: ${fileData.path}');
+            final fullPath = p.join(dirPath, fileData.path);
+            print('Uploading file: $fullPath');
+            upload(fullPath, fileData.folderFingerprint);
+          });
+        } else if (key == 'toClientCreate') {
+          value.elements.forEach((fileData) {
+            if (fileData.isDir) {
+              print('Creating directory: ${fileData.path}');
+              createDirectory(fileData.path);
+            } else {
+              print('Downloading file: ${fileData.path}');
+              download(fileData.path, fileData.fingerprint);
+            }
+          });
+        } else if (key == 'toClientUpdate') {
+          value.elements.forEach((fileData) {
+            print('Updating file: ${fileData.path}');
             download(fileData.path, fileData.fingerprint);
-          }
-        });
-      } else if (key == 'toClientUpdate') {
-        value.elements.forEach((fileData) {
-          print('Updating file: ${fileData.path}');
-          download(fileData.path, fileData.fingerprint);
-        });
-      }
-    });
-  } catch (e) {
-    print('Error: $e');
+          });
+        }
+      });
+    } catch (e) {
+      print('Error: $e');
+    }
   }
-}
 
   void removeFile(String path) {
-    final file = File('$dirPath/$path');
+    final file = File(p.join(dirPath, path));
     if (file.existsSync()) {
       file.deleteSync();
       print('File removed: $path');
@@ -69,7 +69,7 @@ class SyncClient {
   }
 
   void createDirectory(String path) {
-    final directory = Directory('$dirPath/$path');
+    final directory = Directory(p.join(dirPath, path));
     if (!directory.existsSync()) {
       directory.createSync(recursive: true);
       print('Directory created: $path');
@@ -111,7 +111,7 @@ class SyncClient {
   }
 
   Future<void> download(String path, String fingerprint) async {
-    final file = File('$dirPath/$path');
+    final file = File(p.join(dirPath, path));
     final outputStream = file.openWrite();
 
     final request = DownloadRequest(fingerprint: fingerprint);

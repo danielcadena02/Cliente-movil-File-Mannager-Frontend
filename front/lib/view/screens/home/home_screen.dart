@@ -31,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   var fullScreen = false;
   var isSearching = false;
   late FileSystemEntity selectedFile;
+  List<String> uploadedFilePaths = []; // Lista para almacenar los paths de los archivos subidos
 
   @override
   void initState() {
@@ -58,7 +59,7 @@ class _HomePageState extends State<HomePage> {
     final syncRequest = SyncRequest(
       sep: '/',
       user: 'paula',
-      clientTree: {'/path/to/file': FileData(fingerprint: 'checksum')},
+      clientTree: {for (var path in uploadedFilePaths) path: FileData(fingerprint: 'checksum')},
       toRemove: ['/path/to/remove'],
     );
 
@@ -67,6 +68,7 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Synchronization successful')),
       );
+      uploadedFilePaths.clear(); // Vaciar la lista después de la sincronización
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Synchronization failed: $e')),
@@ -377,6 +379,7 @@ class _HomePageState extends State<HomePage> {
         final destinationPath = "${myController.controller.getCurrentPath}/${file.name}";
 
         await File(path).copy(destinationPath);
+        uploadedFilePaths.add(destinationPath); // Agregar el path a la lista
         setState(() {}); // Corregido: Pasar una función vacía a setState
       }
     }
